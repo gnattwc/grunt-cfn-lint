@@ -1,6 +1,6 @@
 {
   "name": "grunt-cfn-lint",
-  "description": "cfn-lint in grunt",
+  "description": "CloudFormation JSON and YAML Validator in grunt",
   "version": "0.1.0",
   "homepage": "https://github.com/gnattwc/grunt-cfn-lint",
   "author": {

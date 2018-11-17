@@ -1,6 +1,6 @@
 # grunt-cfn-lint
 
-> cfn-lint in grunt
+> CloudFormation JSON and YAML Validator in grunt
 
 ## Getting Started
 This plugin requires Grunt `~0.4.5`
@@ -25,58 +25,106 @@ In your project's Gruntfile, add a section named `cfn_lint` to the data object p
 ```js
 grunt.initConfig({
   cfn_lint: {
-    options: {
-      // Task-specific options go here.
-    },
-    your_target: {
-      // Target-specific file lists and/or options go here.
+      glob: {
+        src: [
+          'test/**/setup_resources.yaml',
+          'stacks/rds_*.json',
+          'template_*'  // automatically detects json or yaml files
+          ],
+      },
+      with_options: {
+        files: {
+          src: ['test/valid/smoke.yaml'],
+          src: ['test/invalid/invalid_arn.yaml'],
+        },
+        options: {
+          parameters: {
+            DBName: "Inventory"
+          },
+          pseudoParameters: {
+            'AWS::Region': 'us-west-2'
+          },
+          guessParameters: []
+        },
     },
   },
 });
 ```
 
 ### Options
+The options follows the syntax as used in cfn-lint's ValidationOptions (https://www.npmjs.com/package/cfn-lint#api).
 
-#### options.separator
-Type: `String`
-Default value: `',  '`
+#### options.parameters
+Type: `Object`
+Default value: undefined
 
-A string value that is used to do something with whatever.
+A list of parameters get passed into the template's 'Parameters' before validation
 
-#### options.punctuation
-Type: `String`
-Default value: `'.'`
+#### options.pseudoParameters
+Type: `Object`
+Default value: undefined
 
-A string value that is used to do something else with whatever else.
+`pseudoParameters` are used to override AWS' pseudo-parameters, like `AWS::Region`, `AWS::AccountId`, etc.
+
+#### options.guessParameters
+Type: `Object`
+Default value: undefined
+
+If `guessParameters` is set to a list of parameter names, a critical error will be raised if any Parameter with no Default is not specified in the `parameters` or `guessParameters` options. An empty list can be used to enforce that all parameters must be specified in `parameters`. Leaving as `undefined` preserves the default loose behaviour, where parameters are guessed as needed without causing an error.
+
+```ts
+options {
+  parameters?: {
+    Param1: Param1value,
+    // ...
+  }
+  pseudoParameters?: {
+    'AWS::Region': 'ap-southeast-2',
+    // ...
+  },
+  guessParameters?: string[] | undefined // default undefined
+}
+```
 
 ### Usage Examples
 
 #### Default Options
-In this example, the default options are used to do something with whatever. So if the `testing` file has the content `Testing` and the `123` file had the content `1 2 3`, the generated result would be `Testing, 1 2 3.`
+This example provides a simple use case where the templates are checked with default options.
 
 ```js
 grunt.initConfig({
   cfn_lint: {
-    options: {},
-    files: {
-      'dest/default_options': ['src/testing', 'src/123'],
+    glob: {
+      src: [
+        'test/**/setup_resources.yaml',
+        'stacks/rds_*.json',
+        'template_*'  // automatically detects json or yaml files
+        ],
     },
   },
 });
 ```
 
-#### Custom Options
-In this example, custom options are used to do something else with whatever else. So if the `testing` file has the content `Testing` and the `123` file had the content `1 2 3`, the generated result in this case would be `Testing: 1 2 3 !!!`
+#### Passing Validation Options
+In this example, validation options are passed to the template with parameters and pseudo parameters.  An empty list of guess parameters indicates that all parameters must be specified in `parameters` (as described in the Options section).
 
 ```js
 grunt.initConfig({
   cfn_lint: {
-    options: {
-      separator: ': ',
-      punctuation: ' !!!',
-    },
-    files: {
-      'dest/default_options': ['src/testing', 'src/123'],
+    rds: {
+      files: {
+        src: ['test/cfn/rds.yaml'],
+        src: ['test/cfn/lambda.yaml'],
+      },
+      options: {
+        parameters: {
+          Stage: "integration"
+        },
+        pseudoParameters: {
+          'AWS::Region': 'us-west-2'
+        },
+        guessParameters: []
+      },
     },
   },
 });
@@ -85,5 +133,3 @@ grunt.initConfig({
 ## Contributing
 In lieu of a formal styleguide, take care to maintain the existing coding style. Add unit tests for any new or changed functionality. Lint and test your code using [Grunt](http://gruntjs.com/).
 
-## Release History
-_(Nothing yet)_
